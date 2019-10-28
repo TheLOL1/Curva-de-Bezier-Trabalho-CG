@@ -1,0 +1,13 @@
+.root {
+  -fx-background-color: white; 
+}
+
+.menu-bar
+{
+	-fx-background-color:black;
+}
+
+.menu .label
+{
+	-fx-text-fill:white;
+}
