@@ -68,17 +68,17 @@ public class Principal extends Application {
                 {
                     if (contadorPontosDeControle < quantidadePontosDeControle)
                     {
-                        pontosXControle.add((int)event.getX());
-                        pontosYControle.add((int)event.getY());
+                        pontosXControle.add((int)event.getX()-(1920/2));
+                        pontosYControle.add((1080/2)-(int)event.getY());
                         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
                         graphicsContext.setFill(Color.BLUE);
-                        graphicsContext.fillRect(event.getX()-5,event.getY()-5,10,10);
+                        graphicsContext.fillOval((1920/2)+pontosXControle.get(contadorPontosDeControle),(1080/2)-pontosYControle.get(contadorPontosDeControle),10,10);
                         contadorPontosDeControle++;
                     }
                     else
                     {
                         System.out.println("Entrou");
-                        CurvaBezier(10000);
+                        CurvaBezier();
                         System.out.println("Saiu");
                         informouQuantidade = false;
                         contadorPontosDeControle = 0;
@@ -195,9 +195,9 @@ public class Principal extends Application {
      * @return resultado int - resultado do fatorial
      */
     
-    public static int fatorial(int numero)
+    public static long fatorial(int numero)
     {
-        int resultado = 1;
+        long resultado = 1;
         for (int x = 2; x <= numero; x++)
         {
             resultado *= x;
@@ -212,7 +212,7 @@ public class Principal extends Application {
      * @return int - resultado do coeficiente
      */
     
-    public static int CoeficienteBinomialNewton(int coeficiente, int quantidadePontos)
+    public static double CoeficienteBinomialNewton(int coeficiente, int quantidadePontos)
     {
         return (fatorial(quantidadePontos)/ fatorial(coeficiente) *fatorial(quantidadePontos-coeficiente));
     }
@@ -225,7 +225,7 @@ public class Principal extends Application {
      * @return int - resultado do polinômio
      */
     
-    public static int PolinomioBernstein (int curvaParametrico, int curvaAtual, int quantidadePontos)
+    public static double PolinomioBernstein (int curvaParametrico, int curvaAtual, int quantidadePontos)
     {
         return CoeficienteBinomialNewton(curvaAtual,quantidadePontos)*((int)Math.pow(curvaParametrico,curvaAtual))*((int)Math.pow((1-curvaParametrico),(quantidadePontos-curvaAtual)));
     }
@@ -235,6 +235,43 @@ public class Principal extends Application {
      * @param quantidadePontos int - quantidade de pontos a serem criados
      */
     
+    public void CurvaBezier()
+    {
+        int novoPontoX=0;
+        int novoPontoY=0;
+        double t = 0;
+        int tamanho = pontosXControle.size()-1;
+        double u = 0.0005; // valor intermediário entre 0 e 1
+        for (int i = 1; t <= 1;i++)
+        {
+            novoPontoX=0;
+            novoPontoY=0;
+            for (int j = 0; j <= tamanho;j++)
+            {
+                novoPontoX += (int) (CoeficienteBinomialNewton(j,tamanho)*Math.pow((double)t,(double)j)* Math.pow((double)1-t,(double)tamanho-j)*pontosXControle.get(j));
+                novoPontoY += (int) (CoeficienteBinomialNewton(j,tamanho)*Math.pow((double)t,(double)j)* Math.pow((double)1-t,(double)tamanho-j)*pontosYControle.get(j));
+            }
+            GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+            graphicsContext.setFill(Color.BLACK);
+            graphicsContext.fillOval(novoPontoX+(1920/2),(1080/2)-novoPontoY,5,5);
+            System.out.println(canvas.getWidth());
+            //pixelWriter.setColor(novoPontoX+((int)canvas.getWidth()/2),((int)canvas.getHeight()/2)-novoPontoY,Color.BLACK);
+            if (t == 1)
+            {
+                t = 1.1;
+            }
+            else if(u*i > 1)
+            {
+                t = 1;
+            }
+            else
+            {
+                t = u * i;
+            }
+        }
+    }
+    
+    /*
     public void CurvaBezier(int quantidadePontos)
     {
         for (int x = 0; x < quantidadePontos;x++)
@@ -245,11 +282,13 @@ public class Principal extends Application {
             int j = 0;
             for (j = 0;j < quantidadePontosDeControle;j++)
             {
-                int resultadoPolinomio = PolinomioBernstein(curvaParametrico,j,quantidadePontosDeControle-1);
-                novoX += pontosXControle.get(j) * resultadoPolinomio;
-                novoY += pontosYControle.get(j) * resultadoPolinomio;
+                double resultadoPolinomio = PolinomioBernstein(curvaParametrico,j,quantidadePontosDeControle-1);
+                novoX += (int) (pontosXControle.get(j) * resultadoPolinomio);
+                novoY += (int) (pontosYControle.get(j) * resultadoPolinomio);
+                pixelWriter.setColor(novoX,novoY,Color.BLACK);
             }
         }
     }
+    */
     
 }
