@@ -1,4 +1,5 @@
 
+import java.util.ArrayList;
 import java.util.Optional;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -12,6 +13,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonBar.ButtonData;
@@ -31,6 +33,11 @@ public class Principal extends Application {
     
     private Canvas canvas;
     private PixelWriter pixelWriter;
+    private boolean informouQuantidade = false;
+    private ArrayList<Integer> pontosXControle;
+    private ArrayList<Integer> pontosYControle;
+    private int quantidadePontosDeControle;
+    private int contadorPontosDeControle = 0;
     
     /**
      * Inicializar programa.
@@ -48,9 +55,37 @@ public class Principal extends Application {
     @Override
     public void start(Stage stage)
     {
-        String suporte;
+        pontosXControle = new ArrayList<>();
+        pontosYControle = new ArrayList<>();
         canvas = new Canvas(1920,1080);
         pixelWriter = canvas.getGraphicsContext2D().getPixelWriter();
+        canvas.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
+            @Override
+            public void handle(MouseEvent event)
+            {
+                if (informouQuantidade)
+                {
+                    if (contadorPontosDeControle < quantidadePontosDeControle)
+                    {
+                        pontosXControle.add((int)event.getX());
+                        pontosYControle.add((int)event.getY());
+                        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+                        graphicsContext.setFill(Color.BLUE);
+                        graphicsContext.fillRect(event.getX()-5,event.getY()-5,10,10);
+                        contadorPontosDeControle++;
+                    }
+                    else
+                    {
+                        //chamada bezier
+                        informouQuantidade = false;
+                        contadorPontosDeControle = 0;
+                        pontosXControle.clear();
+                        pontosYControle.clear();
+                    }
+                }
+            }
+        });
         Label bezier = new Label("Curva de Bézier");
         bezier.setOnMouseClicked(new EventHandler<MouseEvent>()
         {
@@ -90,7 +125,11 @@ public class Principal extends Application {
                     {
                         try
                         {
-                            int quantidadePontosDeControle = Integer.parseInt(quantidadePontosDeControleAux);
+                            quantidadePontosDeControle = Integer.parseInt(quantidadePontosDeControleAux);
+                            if (quantidadePontosDeControle > 0)
+                            {
+                                informouQuantidade = true;
+                            }
                         }
                         catch (Exception e)
                         {
@@ -146,6 +185,34 @@ public class Principal extends Application {
         stage.setMaximized(true);
         stage.setTitle("Trabalho CG - Curva de Bézier");
         stage.show();
+    }
+    
+    /**
+     * Retorna o valor do fatorial de determinando número.
+     * @param numero int - número a ser calculado
+     * @return resultado int - resultado do fatorial
+     */
+    
+    public static int fatorial(int numero)
+    {
+        int resultado = 1;
+        for (int x = 2; x <= numero; x++)
+        {
+            resultado *= x;
+        }
+        return (resultado);
+    }
+    
+    /**
+     * Coeficiente Bionimial de Newtown utilizado no Polinômio de Bernstein.
+     * @param coeficiente int - nésimo coeficiente da interpolação
+     * @param quantidadePontos int - quantidade de pontos de controle
+     * @return int - resultado do coeficiente
+     */
+    
+    public static int CoeficienteBinomialNewton(int coeficiente, int quantidadePontos)
+    {
+        return (fatorial(quantidadePontos)/ fatorial(coeficiente) *fatorial(quantidadePontos-coeficiente));
     }
     
 }
