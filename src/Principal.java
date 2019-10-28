@@ -26,7 +26,7 @@ import javafx.scene.paint.Color;
 
 /*
  * Gabriel de Lima Corrêa Ferreira - 598883
- * Curva de Bezier
+ * Curva de Bézier
  */
 
 public class Principal extends Application {
@@ -77,7 +77,9 @@ public class Principal extends Application {
                     }
                     else
                     {
-                        //chamada bezier
+                        System.out.println("Entrou");
+                        CurvaBezier(10000);
+                        System.out.println("Saiu");
                         informouQuantidade = false;
                         contadorPontosDeControle = 0;
                         pontosXControle.clear();
@@ -213,6 +215,45 @@ public class Principal extends Application {
     public static int CoeficienteBinomialNewton(int coeficiente, int quantidadePontos)
     {
         return (fatorial(quantidadePontos)/ fatorial(coeficiente) *fatorial(quantidadePontos-coeficiente));
+    }
+    
+    /**
+     * Polinômio de Bernstein
+     * @param curvaParametrico int - valor paramétrico da curva
+     * @param curvaAtual int - ponto atual da curva
+     * @param quantidadePontos int - quantidade de pontos de controle
+     * @return int - resultado do polinômio
+     */
+    
+    public static int PolinomioBernstein (int curvaParametrico, int curvaAtual, int quantidadePontos)
+    {
+        return CoeficienteBinomialNewton(curvaAtual,quantidadePontos)*((int)Math.pow(curvaParametrico,curvaAtual))*((int)Math.pow((1-curvaParametrico),(quantidadePontos-curvaAtual)));
+    }
+    
+    /**
+     * Curva de Bézier.
+     * @param quantidadePontos int - quantidade de pontos a serem criados
+     */
+    
+    public void CurvaBezier(int quantidadePontos)
+    {
+        for (int x = 0; x < quantidadePontos;x++)
+        {
+            int curvaParametrico = x / (quantidadePontos-1); // valor entre 0 e 1, intervalo entre os pontos a serem criados
+            int novoX = 0;
+            int novoY = 0;
+            int j = 0;
+            for (j = 0;j < quantidadePontosDeControle;j++)
+            {
+                int resultadoPolinomio = PolinomioBernstein(curvaParametrico,j,quantidadePontosDeControle-1);
+                novoX += pontosXControle.get(j) * resultadoPolinomio;
+                novoY += pontosYControle.get(j) * resultadoPolinomio;
+                GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+                graphicsContext.setFill(Color.BLUE);
+                graphicsContext.fillRect(novoX,novoY,10,10);
+            }
+            //pixelWriter.setColor(novoX,novoY,Color.BLACK);
+        }
     }
     
 }
