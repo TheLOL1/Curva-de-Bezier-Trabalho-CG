@@ -248,11 +248,7 @@ public class Principal extends Application {
                 int resultadoPolinomio = PolinomioBernstein(curvaParametrico,j,quantidadePontosDeControle-1);
                 novoX += pontosXControle.get(j) * resultadoPolinomio;
                 novoY += pontosYControle.get(j) * resultadoPolinomio;
-                GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-                graphicsContext.setFill(Color.BLUE);
-                graphicsContext.fillRect(novoX,novoY,10,10);
             }
-            //pixelWriter.setColor(novoX,novoY,Color.BLACK);
         }
     }
     
