@@ -68,18 +68,17 @@ public class Principal extends Application {
                 {
                     if (contadorPontosDeControle < quantidadePontosDeControle)
                     {
-                        pontosXControle.add((int)event.getX()-(1920/2));
-                        pontosYControle.add((1080/2)-(int)event.getY());
+                        pontosXControle.add((int)(event.getX()-(canvas.getWidth()/2)));
+                        pontosYControle.add((int)((canvas.getHeight()/2)-event.getY()));
                         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-                        graphicsContext.setFill(Color.BLUE);
-                        graphicsContext.fillOval((1920/2)+pontosXControle.get(contadorPontosDeControle),(1080/2)-pontosYControle.get(contadorPontosDeControle),10,10);
+                        graphicsContext.setFill(Color.RED);
+                        graphicsContext.fillRect((canvas.getWidth()/2)+pontosXControle.get(contadorPontosDeControle),(canvas.getHeight()/2)-pontosYControle.get(contadorPontosDeControle),10,10);
                         contadorPontosDeControle++;
                     }
-                    else
+                    if (contadorPontosDeControle == quantidadePontosDeControle)
                     {
-                        System.out.println("Entrou");
                         CurvaBezier();
-                        System.out.println("Saiu");
+                        LigarPontosDeControle();
                         informouQuantidade = false;
                         contadorPontosDeControle = 0;
                         pontosXControle.clear();
@@ -171,13 +170,24 @@ public class Principal extends Application {
                 alertaAjuda.showAndWait();
             }
         });
+        Label limparCanvas = new Label("Limpar Canvas");
+        limparCanvas.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
+            @Override
+            public void handle(MouseEvent event)
+            {
+                LimparCanvas();
+            }
+        });
         Menu menuBezier = new Menu();
         Menu menuSobre = new Menu();
         Menu menuAjuda = new Menu();
+        Menu menuLimparCanvas = new Menu();
         menuBezier.setGraphic(bezier);
         menuSobre.setGraphic(sobre);
         menuAjuda.setGraphic(ajuda);
-        MenuBar menuBar = new MenuBar(menuBezier,menuSobre,menuAjuda);
+        menuLimparCanvas.setGraphic(limparCanvas);
+        MenuBar menuBar = new MenuBar(menuBezier,menuLimparCanvas,menuSobre,menuAjuda);
         BorderPane pane = new BorderPane();
         pane.setCenter(canvas);
         pane.setTop(menuBar);
@@ -218,21 +228,7 @@ public class Principal extends Application {
     }
     
     /**
-     * Polinômio de Bernstein
-     * @param curvaParametrico int - valor paramétrico da curva
-     * @param curvaAtual int - ponto atual da curva
-     * @param quantidadePontos int - quantidade de pontos de controle
-     * @return int - resultado do polinômio
-     */
-    
-    public static double PolinomioBernstein (int curvaParametrico, int curvaAtual, int quantidadePontos)
-    {
-        return CoeficienteBinomialNewton(curvaAtual,quantidadePontos)*((int)Math.pow(curvaParametrico,curvaAtual))*((int)Math.pow((1-curvaParametrico),(quantidadePontos-curvaAtual)));
-    }
-    
-    /**
      * Curva de Bézier.
-     * @param quantidadePontos int - quantidade de pontos a serem criados
      */
     
     public void CurvaBezier()
@@ -242,20 +238,19 @@ public class Principal extends Application {
         double t = 0;
         int tamanho = pontosXControle.size()-1;
         double u = 0.0005; // valor intermediário entre 0 e 1
+        System.out.println(u);
         for (int i = 1; t <= 1;i++)
         {
             novoPontoX=0;
             novoPontoY=0;
             for (int j = 0; j <= tamanho;j++)
             {
-                novoPontoX += (int) (CoeficienteBinomialNewton(j,tamanho)*Math.pow((double)t,(double)j)* Math.pow((double)1-t,(double)tamanho-j)*pontosXControle.get(j));
-                novoPontoY += (int) (CoeficienteBinomialNewton(j,tamanho)*Math.pow((double)t,(double)j)* Math.pow((double)1-t,(double)tamanho-j)*pontosYControle.get(j));
+                novoPontoX += (int)(CoeficienteBinomialNewton(j, tamanho) * Math.pow((double)t, (double)j) * Math.pow((double)1-t,(double)tamanho-j) * (pontosXControle.get(j)));
+                novoPontoY += (int)(CoeficienteBinomialNewton(j, tamanho) * Math.pow((double)t, (double)j) * Math.pow((double)1-t,(double)tamanho-j) * (pontosYControle.get(j)));
             }
             GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
             graphicsContext.setFill(Color.BLACK);
-            graphicsContext.fillOval(novoPontoX+(1920/2),(1080/2)-novoPontoY,5,5);
-            System.out.println(canvas.getWidth());
-            //pixelWriter.setColor(novoPontoX+((int)canvas.getWidth()/2),((int)canvas.getHeight()/2)-novoPontoY,Color.BLACK);
+            graphicsContext.fillOval(novoPontoX+(canvas.getWidth()/2),(canvas.getHeight()/2)-novoPontoY,10,10);
             if (t == 1)
             {
                 t = 1.1;
@@ -271,24 +266,33 @@ public class Principal extends Application {
         }
     }
     
-    /*
-    public void CurvaBezier(int quantidadePontos)
+    /**
+     * Limpa completamente a região do Canvas.
+     */
+    
+    public void LimparCanvas()
     {
-        for (int x = 0; x < quantidadePontos;x++)
+        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, 1920, 1080);
+        informouQuantidade = false;
+        contadorPontosDeControle = 0;
+        pontosXControle.clear();
+        pontosYControle.clear();
+    }
+    
+    /**
+     * Metodo para ligar os pontos de controle.
+     */
+    
+    public void LigarPontosDeControle()
+    {
+        int conversaoX = (int)(canvas.getWidth()/2);
+        int conversaoY = (int)(canvas.getHeight()/2);
+        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        graphicsContext.setFill(Color.DARKTURQUOISE);
+        for (int x = 0; x < pontosXControle.size()-1;x++)
         {
-            int curvaParametrico = x / (quantidadePontos-1); // valor entre 0 e 1, intervalo entre os pontos a serem criados
-            int novoX = 0;
-            int novoY = 0;
-            int j = 0;
-            for (j = 0;j < quantidadePontosDeControle;j++)
-            {
-                double resultadoPolinomio = PolinomioBernstein(curvaParametrico,j,quantidadePontosDeControle-1);
-                novoX += (int) (pontosXControle.get(j) * resultadoPolinomio);
-                novoY += (int) (pontosYControle.get(j) * resultadoPolinomio);
-                pixelWriter.setColor(novoX,novoY,Color.BLACK);
-            }
+            graphicsContext.strokeLine(conversaoX + (pontosXControle.get(x)), conversaoY - (pontosYControle.get(x)),conversaoX + (pontosXControle.get(x+1)),conversaoY - (pontosYControle.get(x+1)));
         }
     }
-    */
-    
 }
