@@ -64,11 +64,11 @@ public class Principal extends Application {
                 {
                     if (contadorPontosDeControle < 4)
                     {
-                        pontosXControle[contadorPontosDeControle] = (int)(event.getX()-5);
-                        pontosYControle[contadorPontosDeControle] = (int)(event.getY()-5);
+                        pontosXControle[contadorPontosDeControle] = (int)(event.getX());
+                        pontosYControle[contadorPontosDeControle] = (int)(event.getY());
                         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
                         graphicsContext.setFill(Color.RED);
-                        graphicsContext.fillRect(pontosXControle[contadorPontosDeControle],pontosYControle[contadorPontosDeControle],10,10);
+                        graphicsContext.fillRect(pontosXControle[contadorPontosDeControle]-5,pontosYControle[contadorPontosDeControle]-5,10,10);
                         contadorPontosDeControle++;
                     }
                     if (contadorPontosDeControle == 4)
@@ -80,12 +80,12 @@ public class Principal extends Application {
                 }
                 else if(comando == 'E')
                 {
-                    EditarCurva((int)(event.getX()-5),(int)(event.getY()-5));
+                    EditarCurva((int)(event.getX()),(int)(event.getY()));
                     GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
                     graphicsContext.setFill(Color.RED);
                     for (int x = 0; x < 4;x++)
                     {
-                       graphicsContext.fillRect(pontosXControle[x],pontosYControle[x],10,10); 
+                       graphicsContext.fillRect(pontosXControle[x]-5,pontosYControle[x]-5,10,10); 
                     }
                 }
             }
