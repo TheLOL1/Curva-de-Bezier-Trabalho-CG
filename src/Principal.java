@@ -1,10 +1,7 @@
 
-import java.util.ArrayList;
-import java.util.Optional;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -16,12 +13,10 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.TextField;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 
 /*
@@ -33,11 +28,12 @@ public class Principal extends Application {
     
     private Canvas canvas;
     private PixelWriter pixelWriter;
-    private boolean informouQuantidade = false;
-    private ArrayList<Integer> pontosXControle;
-    private ArrayList<Integer> pontosYControle;
-    private int quantidadePontosDeControle;
+    private char comando = ' ';
     private int contadorPontosDeControle = 0;
+    private int [ ] pontosXControle;
+    private int [ ] pontosYControle;
+    private boolean desenhou = false;
+    private int posicaoPontoEditar;
     
     /**
      * Inicializar programa.
@@ -55,8 +51,8 @@ public class Principal extends Application {
     @Override
     public void start(Stage stage)
     {
-        pontosXControle = new ArrayList<>();
-        pontosYControle = new ArrayList<>();
+        pontosXControle = new int[4];
+        pontosYControle = new int[4];
         canvas = new Canvas(1920,1080);
         pixelWriter = canvas.getGraphicsContext2D().getPixelWriter();
         canvas.setOnMouseClicked(new EventHandler<MouseEvent>()
@@ -64,84 +60,79 @@ public class Principal extends Application {
             @Override
             public void handle(MouseEvent event)
             {
-                if (informouQuantidade)
+                if (comando == 'D' && !desenhou)
                 {
-                    if (contadorPontosDeControle < quantidadePontosDeControle)
+                    if (contadorPontosDeControle < 4)
                     {
-                        pontosXControle.add((int)(event.getX()-(canvas.getWidth()/2)));
-                        pontosYControle.add((int)((canvas.getHeight()/2)-event.getY()));
+                        pontosXControle[contadorPontosDeControle] = (int)(event.getX()-5);
+                        pontosYControle[contadorPontosDeControle] = (int)(event.getY()-5);
                         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
                         graphicsContext.setFill(Color.RED);
-                        graphicsContext.fillRect((canvas.getWidth()/2)+pontosXControle.get(contadorPontosDeControle),(canvas.getHeight()/2)-pontosYControle.get(contadorPontosDeControle),10,10);
+                        graphicsContext.fillRect(pontosXControle[contadorPontosDeControle],pontosYControle[contadorPontosDeControle],10,10);
                         contadorPontosDeControle++;
                     }
-                    if (contadorPontosDeControle == quantidadePontosDeControle)
+                    if (contadorPontosDeControle == 4)
                     {
                         CurvaBezier();
-                        LigarPontosDeControle();
-                        informouQuantidade = false;
+                        desenhou = true;
                         contadorPontosDeControle = 0;
-                        pontosXControle.clear();
-                        pontosYControle.clear();
+                    }
+                }
+                else if(comando == 'E')
+                {
+                    EditarCurva((int)(event.getX()-5),(int)(event.getY()-5));
+                    GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+                    graphicsContext.setFill(Color.RED);
+                    for (int x = 0; x < 4;x++)
+                    {
+                       graphicsContext.fillRect(pontosXControle[x],pontosYControle[x],10,10); 
                     }
                 }
             }
         });
-        Label bezier = new Label("Curva de Bézier");
-        bezier.setOnMouseClicked(new EventHandler<MouseEvent>()
+        MenuItem menuItemDesenhar = new MenuItem("Desenhar");
+        menuItemDesenhar.setOnAction(new EventHandler<ActionEvent>()
+        {
+           @Override
+           public void handle(ActionEvent event)
+           {
+               comando = 'D';
+           }
+        });
+        MenuItem menuItemEditar = new MenuItem("Editar");
+        menuItemEditar.setOnAction(new EventHandler<ActionEvent>()
         {
             @Override
-            public void handle(MouseEvent event)
+            public void handle(ActionEvent event)
             {
-                Dialog <String> informarQuantidadePontosDeControle = new Dialog<>();
-                informarQuantidadePontosDeControle.setTitle("Curva de Bézier");
-                informarQuantidadePontosDeControle.setHeaderText(null);
-                ButtonType ok = new ButtonType("OK",ButtonData.OK_DONE);
-                informarQuantidadePontosDeControle.getDialogPane().getButtonTypes().addAll(ok,ButtonType.CANCEL);
-                GridPane grid = new GridPane();
-                grid.setHgap(10);
-                grid.setVgap(10);
-                grid.setPadding(new Insets(20,150,10,10));
-                TextField quantidadePontosDeControleCampo = new TextField();
-                grid.add(new Label("Quantidade Pontos de Controle:"),0,0);
-                grid.add(quantidadePontosDeControleCampo,1,0);
-                Node node = informarQuantidadePontosDeControle.getDialogPane().lookupButton(ok);
-                quantidadePontosDeControleCampo.textProperty().addListener((observable,oldValue,newValue) ->
+                if (desenhou)
                 {
-                   node.setDisable(newValue.trim().isEmpty()); 
-                });
-                informarQuantidadePontosDeControle.getDialogPane().setContent(grid);
-                informarQuantidadePontosDeControle.setResultConverter(dialogButton ->
-                {
-                    if (dialogButton == ok)
+                    ChoiceDialog choiceDialog = new ChoiceDialog("01","01","02","03","04");
+                    choiceDialog.setTitle("Editar");
+                    choiceDialog.setHeaderText("Após confirmar qual ponto deseja editar, clique na região do canvas que deseja para atualizar posição do ponto e com isso atualizar a curva.");
+                    choiceDialog.setContentText("Ponto:");
+                    choiceDialog.showAndWait().ifPresent(r -> 
                     {
-                        return (quantidadePontosDeControleCampo.getText());
-                    }
-                    return null;
-                });
-                Optional<String> optional = informarQuantidadePontosDeControle.showAndWait();
-                optional.ifPresent(quantidadePontosDeControleAux ->
-                {
-                    if (!quantidadePontosDeControleAux.isEmpty())
-                    {
-                        try
+                        String ponto = r.toString();
+                        if (ponto.equals("01"))
                         {
-                            quantidadePontosDeControle = Integer.parseInt(quantidadePontosDeControleAux);
-                            if (quantidadePontosDeControle > 0)
-                            {
-                                informouQuantidade = true;
-                            }
+                           posicaoPontoEditar = 0; 
                         }
-                        catch (Exception e)
+                        else if(ponto.equals("02"))
                         {
-                            Alert alertaErro = new Alert(AlertType.ERROR);
-                            alertaErro.setTitle("ERRO");
-                            alertaErro.setHeaderText("Quantidade Invalida!");
-                            alertaErro.setHeaderText("Insira valores inteiros!");
-                            alertaErro.showAndWait();
+                            posicaoPontoEditar = 1;
                         }
-                    }
-                });
+                        else if(ponto.equals("03"))
+                        {
+                            posicaoPontoEditar = 2;
+                        }
+                        else
+                        {
+                            posicaoPontoEditar = 3;
+                        }
+                        comando = 'E';
+                    });
+                }
             }
         });
         Label sobre = new Label("Sobre");
@@ -166,7 +157,9 @@ public class Principal extends Application {
                 Alert alertaAjuda = new Alert(AlertType.INFORMATION);
                 alertaAjuda.setTitle("Ajuda");
                 alertaAjuda.setHeaderText(null);
-                alertaAjuda.setContentText("Após clicar em Curva de Bézier informe a quantidade de pontos de controle, após isso clique no canvas para definir a posição deste pontos para curva ser plotada.");
+                alertaAjuda.setContentText("Pode ser plotado no máximo uma curva no canvas, para desenhar uma nova clique em Limpar Canvas.\n\n" +
+                        "Desenhar: Após clicar em Curva de Bézier -> Desenhar, clique no canvas para definir a posição dos 4 pontos para curva ser plotada.\n\n"
+                        + "Editar: Após clicar em Curva de Bézier -> Editar, selecione o ponto que deseja editar, após confirmar clique na região do canvas que deseja para atualizar a posição do ponto e com isso atualizar a curva.");
                 alertaAjuda.showAndWait();
             }
         });
@@ -179,11 +172,14 @@ public class Principal extends Application {
                 LimparCanvas();
             }
         });
-        Menu menuBezier = new Menu();
+        Menu menuBezier = new Menu("Curva de Bézier");
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        menuBezier.getItems().add(menuItemDesenhar);
+        menuBezier.getItems().add(separator);
+        menuBezier.getItems().add(menuItemEditar);
         Menu menuSobre = new Menu();
         Menu menuAjuda = new Menu();
         Menu menuLimparCanvas = new Menu();
-        menuBezier.setGraphic(bezier);
         menuSobre.setGraphic(sobre);
         menuAjuda.setGraphic(ajuda);
         menuLimparCanvas.setGraphic(limparCanvas);
@@ -200,70 +196,52 @@ public class Principal extends Application {
     }
     
     /**
-     * Retorna o valor do fatorial de determinando número.
-     * @param numero int - número a ser calculado
-     * @return resultado int - resultado do fatorial
-     */
-    
-    public static long fatorial(int numero)
-    {
-        long resultado = 1;
-        for (int x = 2; x <= numero; x++)
-        {
-            resultado *= x;
-        }
-        return (resultado);
-    }
-    
-    /**
-     * Coeficiente Bionimial de Newtown utilizado no Polinômio de Bernstein.
-     * @param coeficiente int - nésimo coeficiente da interpolação
-     * @param quantidadePontos int - quantidade de pontos de controle
-     * @return int - resultado do coeficiente
-     */
-    
-    public static double CoeficienteBinomialNewton(int coeficiente, int quantidadePontos)
-    {
-        return (fatorial(quantidadePontos)/ fatorial(coeficiente) *fatorial(quantidadePontos-coeficiente));
-    }
-    
-    /**
      * Curva de Bézier.
      */
     
     public void CurvaBezier()
     {
-        int novoPontoX=0;
-        int novoPontoY=0;
-        double t = 0;
-        int tamanho = pontosXControle.size()-1;
-        double u = 0.0005; // valor intermediário entre 0 e 1
-        System.out.println(u);
-        for (int i = 1; t <= 1;i++)
+        double u = 0.0001; // valor de controle u entre 0 e 1
+        for (double t = 0; t < 1; t+=u)
         {
-            novoPontoX=0;
-            novoPontoY=0;
-            for (int j = 0; j <= tamanho;j++)
-            {
-                novoPontoX += (int)(CoeficienteBinomialNewton(j, tamanho) * Math.pow((double)t, (double)j) * Math.pow((double)1-t,(double)tamanho-j) * (pontosXControle.get(j)));
-                novoPontoY += (int)(CoeficienteBinomialNewton(j, tamanho) * Math.pow((double)t, (double)j) * Math.pow((double)1-t,(double)tamanho-j) * (pontosYControle.get(j)));
-            }
-            GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-            graphicsContext.setFill(Color.BLACK);
-            graphicsContext.fillOval(novoPontoX+(canvas.getWidth()/2),(canvas.getHeight()/2)-novoPontoY,10,10);
-            if (t == 1)
-            {
-                t = 1.1;
-            }
-            else if(u*i > 1)
-            {
-                t = 1;
-            }
-            else
-            {
-                t = u * i;
-            }
+            plotarPontoBezier(t);
         }
+    }
+    
+    /**
+     * Define as coordenadas do novo ponto para ser formado a Curva.
+     * @param tAux double - variavel de controle de atualização dos novos pontos
+     */
+    
+    public void plotarPontoBezier(double tAux)
+    {
+        int x1 = pontosXControle[0];
+        int x2 = pontosXControle[1];
+        int x3 = pontosXControle[2];
+        int x4 = pontosXControle[3];
+        int y1 = pontosYControle[0];
+        int y2 = pontosYControle[1];
+        int y3 = pontosYControle[2];
+        int y4 = pontosYControle[3];
+        double novoX = Math.pow(1-tAux,3) * x1 + 3 * tAux * Math.pow(1-tAux,2) * x2 + 3 * Math.pow(tAux,2) * (1-tAux) * x3 + Math.pow(tAux,3) * x4;
+        double novoY = Math.pow(1-tAux,3) * y1 + 3 * tAux * Math.pow(1-tAux,2) * y2 + 3 * Math.pow(tAux,2) * (1-tAux) * y3 + Math.pow(tAux,3) * y4;
+        pixelWriter.setColor((int)Math.round(novoX),(int)Math.round(novoY),Color.BLACK);
+    }
+    
+    /**
+     * Editar curva.
+     * @param xNovo - int nova coordenada x do ponto que vai ser editado
+     * @param yNovo - int nova coordenada y do ponto que vai ser editado
+     */
+    
+    public void EditarCurva(int xNovo, int yNovo)
+    {
+        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, 1920, 1080);
+        comando = ' ';
+        pontosXControle[posicaoPontoEditar] = xNovo;
+        pontosYControle[posicaoPontoEditar] = yNovo;
+        CurvaBezier();
     }
     
     /**
@@ -274,25 +252,8 @@ public class Principal extends Application {
     {
         GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, 1920, 1080);
-        informouQuantidade = false;
+        comando = ' ';
+        desenhou = false;
         contadorPontosDeControle = 0;
-        pontosXControle.clear();
-        pontosYControle.clear();
-    }
-    
-    /**
-     * Metodo para ligar os pontos de controle.
-     */
-    
-    public void LigarPontosDeControle()
-    {
-        int conversaoX = (int)(canvas.getWidth()/2);
-        int conversaoY = (int)(canvas.getHeight()/2);
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        graphicsContext.setFill(Color.DARKTURQUOISE);
-        for (int x = 0; x < pontosXControle.size()-1;x++)
-        {
-            graphicsContext.strokeLine(conversaoX + (pontosXControle.get(x)), conversaoY - (pontosYControle.get(x)),conversaoX + (pontosXControle.get(x+1)),conversaoY - (pontosYControle.get(x+1)));
-        }
     }
 }

@@ -11,3 +11,26 @@
 {
 	-fx-text-fill:white;
 }
+
+.context-menu {
+  -fx-background-color: black;
+  -fx-text-fill: white;
+}
+
+.menu-item .label {
+  -fx-text-fill: white;
+}
+
+.menu-item:focused .label {
+  -fx-text-fill: white;
+}
+
+.ui-menu .ui-separator { 
+   background: #A8A8A8; 
+   border: none; 
+   width: 1px; 
+   clear: none; 
+   height: 22px; 
+   margin: 4px 6px 0; 
+   box-shadow: none; 
+}
